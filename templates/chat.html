@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Medical Chatbot</title>
+
+<!-- Font + Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+
+/* ===== GLOBAL ===== */
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: linear-gradient(135deg, #26333d, #323741, #21214e);
+}
+
+/* ===== CHAT CONTAINER ===== */
+.chat-container {
+    width: 100%;
+    max-width: 420px;
+    height: 600px;
+
+    display: flex;
+    flex-direction: column;
+
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+
+/* ===== HEADER ===== */
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    color: white;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.chat-header img {
+    width: 45px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.chat-header h4 {
+    margin: 0;
+}
+
+.chat-header p {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* ===== MESSAGES ===== */
+.chat-body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+/* Scrollbar */
+.chat-body::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+}
+
+/* ===== MESSAGE ===== */
+.message {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.message.bot {
+    justify-content: flex-start;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    color: white;
+    font-size: 14px;
+    position: relative;
+}
+
+/* Bot bubble */
+.bot .bubble {
+    background: linear-gradient(135deg, #4dabf7, #2ec4b6);
+}
+
+/* User bubble */
+.user .bubble {
+    background: linear-gradient(135deg, #58cc71, #38b000);
+}
+
+/* ===== INPUT ===== */
+.chat-footer {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.chat-footer input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+.chat-footer button {
+    border: none;
+    margin-left: 10px;
+    padding: 12px 15px;
+    border-radius: 50%;
+    background: #2ec4b6;
+    color: white;
+    cursor: pointer;
+}
+
+/* ===== TYPING ANIMATION ===== */
+.typing span {
+    height: 6px;
+    width: 6px;
+    background: white;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 2px;
+    animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-5px); }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+    <!-- HEADER -->
+    <div class="chat-header">
+        <img src="https://cdn-icons-png.flaticon.com/512/387/387569.png">
+        <div>
+            <h4>Medical Bot</h4>
+            <p>Ask me anything</p>
+        </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="chat-body" id="chatBody"></div>
+
+    <!-- INPUT -->
+    <form class="chat-footer" id="chatForm">
+        <input type="text" id="userInput" placeholder="Type a message..." required>
+        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+    </form>
+
+</div>
+
+<script>
+
+function scrollToBottom() {
+    let chat = document.getElementById("chatBody");
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function addMessage(text, type) {
+    let message = `
+        <div class="message ${type}">
+            <div class="bubble">${text}</div>
+        </div>`;
+    $("#chatBody").append(message);
+    scrollToBottom();
+}
+
+function showTyping() {
+    let typing = `
+    <div class="message bot" id="typing">
+        <div class="bubble typing">
+            <span></span><span></span><span></span>
+        </div>
+    </div>`;
+    $("#chatBody").append(typing);
+    scrollToBottom();
+}
+
+function removeTyping() {
+    $("#typing").remove();
+}
+
+$("#chatForm").submit(function(e) {
+    e.preventDefault();
+
+    let input = $("#userInput").val();
+
+    addMessage(input, "user");
+    $("#userInput").val("");
+
+    showTyping();
+
+    $.ajax({
+        url: "/get",
+        method: "POST",
+        data: { msg: input },
+        success: function(response) {
+            removeTyping();
+            addMessage(response, "bot");
+        }
+    });
+});
+
+</script>
+
+</body>
+</html>
